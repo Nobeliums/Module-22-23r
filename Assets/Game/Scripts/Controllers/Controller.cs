@@ -1,6 +1,6 @@
 public abstract class Controller
 {
-	private bool _isEnabled;
+	protected bool _isEnabled;
 
 	public bool IsEnabled => _isEnabled;
 
