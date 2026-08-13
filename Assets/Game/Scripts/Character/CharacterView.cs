@@ -11,11 +11,12 @@ public class CharacterView : MonoBehaviour
 	
 	[SerializeField] private Character _character;
 	[SerializeField] private Animator _animator;
+	[SerializeField] private GameObject _moveDirectionFlag;
 
 	private float _previousHealthPercent;
 	private bool _isEnabled;
 
-	private bool IsRunning => _character.Agent.desiredVelocity != Vector3.zero;
+	private bool IsRunning => _character.IsMoving;
 	private float HealthPercent => (float)_character.Health.Value / _character.Health.MaxValue;
 
 	private void Start()
@@ -47,6 +48,8 @@ public class CharacterView : MonoBehaviour
 
 		_previousHealthPercent = HealthPercent;
 
+		SetMoveDirectionFlagTarget();
+
 		Debug.Log($"HP: {_character.Health.Value}, {HealthPercent}, {_previousHealthPercent}");
 	}
 
@@ -68,5 +71,14 @@ public class CharacterView : MonoBehaviour
 
 		_animator.SetLayerWeight(layerIndex, 1.0f);
 		_animator.Play(_takeDamageHash, layerIndex, 0f);
+	}
+
+	private void SetMoveDirectionFlagTarget()
+	{
+		_moveDirectionFlag.transform.position = new Vector3(_character.CurrentDestinaction.x,
+			_character.transform.position.y,
+			_character.CurrentDestinaction.z);
+		
+		_moveDirectionFlag.SetActive(IsRunning);
 	}
 }

@@ -14,10 +14,9 @@ public class PlayerControllerHandler : MonoBehaviour
 	private void Awake()
 	{
 		_controller = new CompositeController(
-			new NavMeshAgentController(_character.Agent, _groundLayer, _moveDirectionFlag),
+			new NavMeshAgentController(_character, _groundLayer, _moveDirectionFlag),
 			new RotateToMoveDirectionController(_character));
 		_controller.Enable();
-		_character.Agent.updateRotation = false;
 	}
 
 	private void Update()

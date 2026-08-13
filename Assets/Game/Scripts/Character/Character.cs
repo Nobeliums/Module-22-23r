@@ -4,26 +4,30 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealable
+public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealable, IDestinationMovable
 {
-	[SerializeField] private float _moveSpeed;
 	[SerializeField] private float _rotationSpeed;
 	[SerializeField] private int _maxHealth;
 	[SerializeField] private int _startingHealth;
+	[SerializeField] private NavMeshAgent _agent;
 
 	private DirectionRotator _rotator;
 	private Health _health;
 
-	[field: SerializeField] public NavMeshAgent Agent { get; private set; }
 
 	public Quaternion CurrentRotation => transform.rotation;
 	public Health Health => _health;
 	public bool IsDeath => _health.Value <= 0;
+	public NavMeshAgent Agent => _agent;
+
+	public bool IsMoving => _agent.pathPending || _agent.remainingDistance > _agent.stoppingDistance;
+	public Vector3 CurrentDestinaction => _agent.destination;
 
 	private void Awake()
 	{
 		_rotator = new DirectionRotator(_rotationSpeed, transform);
 		_health = new Health(_startingHealth, _maxHealth);
+		_agent.updateRotation = false;
 	}
 
 	private void Update()
@@ -58,4 +62,7 @@ public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealab
 		
 		Debug.Log($"Исцеление на {amount} у {gameObject.name}");
 	}
+
+
+	public void SetDestination(Vector3 target) => _agent.SetDestination(target);
 }

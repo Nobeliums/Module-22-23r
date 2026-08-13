@@ -7,19 +7,16 @@ public class NavMeshAgentController : Controller
 {
 	private const float Epsilon = 0.05f;
 	
-	private NavMeshAgent _agent;
+	private IDestinationMovable _agent;
 	private Vector3 _currentTarget;
 	private LayerMask _groundLayer;
 	private GameObject _moveDirectionFlag;
 
-	private bool IsMove => _agent.pathPending || _agent.remainingDistance > _agent.stoppingDistance;
-
-	public NavMeshAgentController(NavMeshAgent agent, LayerMask groundLayer, GameObject moveDirectionFlag)
+	public NavMeshAgentController(IDestinationMovable agent, LayerMask groundLayer, GameObject moveDirectionFlag)
 	{
 		_agent = agent;
 		_groundLayer = groundLayer;
 		_moveDirectionFlag = moveDirectionFlag;
-		_currentTarget = agent.transform.position;
 	}
 
 	protected override void UpdateLogic(float deltaTime)
@@ -28,10 +25,6 @@ public class NavMeshAgentController : Controller
 		{
 			UpdateTarget();
 		}
-
-		if (IsMove == false)
-			_moveDirectionFlag.SetActive(false);
-		
 	}
 
 	private void UpdateTarget()
@@ -42,9 +35,6 @@ public class NavMeshAgentController : Controller
 		{
 			_currentTarget = hit.point;
 			_agent.SetDestination(_currentTarget);
-
-			_moveDirectionFlag.SetActive(true);
-			_moveDirectionFlag.transform.position = new Vector3(hit.point.x, _agent.transform.position.y, hit.point.z);
 		}
 	}
 }
