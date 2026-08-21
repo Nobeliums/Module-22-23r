@@ -10,17 +10,28 @@ public class NavMeshAgentController : Controller
 	private IDestinationMovable _agent;
 	private Vector3 _currentTarget;
 	private LayerMask _groundLayer;
-	private GameObject _moveDirectionFlag;
+	private readonly IJumpable _jumpable;
 
-	public NavMeshAgentController(IDestinationMovable agent, LayerMask groundLayer, GameObject moveDirectionFlag)
+	public NavMeshAgentController(IDestinationMovable agent,
+		LayerMask groundLayer,
+		GameObject moveDirectionFlag,
+		IJumpable jumpable)
 	{
 		_agent = agent;
 		_groundLayer = groundLayer;
-		_moveDirectionFlag = moveDirectionFlag;
+		_jumpable = jumpable;
 	}
 
 	protected override void UpdateLogic(float deltaTime)
 	{
+		if (_jumpable.CanJump)
+		{
+			if (_jumpable.InJumpProcess)
+				return;
+
+			_jumpable.Jump();
+		}
+
 		if (InputManager.GetMouseButtonDown(InputManager.RightMouseButton))
 		{
 			UpdateTarget();

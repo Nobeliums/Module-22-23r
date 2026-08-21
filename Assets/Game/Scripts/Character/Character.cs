@@ -1,17 +1,17 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealable, IDestinationMovable
+public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealable, IDestinationMovable, IJumpable
 {
 	[SerializeField] private float _rotationSpeed;
 	[SerializeField] private int _maxHealth;
 	[SerializeField] private int _startingHealth;
+	[SerializeField] private int _jumpSpeed;
 	[SerializeField] private NavMeshAgent _agent;
+	[SerializeField] private AnimationCurve _jumpCurve;
 
 	private DirectionRotator _rotator;
+	private NavMeshAgentJumper _jumper;
 	private Health _health;
 
 
@@ -23,11 +23,15 @@ public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealab
 	public bool IsMoving => _agent.pathPending || _agent.remainingDistance > _agent.stoppingDistance;
 	public Vector3 CurrentDestinaction => _agent.destination;
 
+	public bool CanJump => _agent.isOnOffMeshLink;
+	public bool InJumpProcess => _jumper.InProcess;
+
 	private void Awake()
 	{
 		_rotator = new DirectionRotator(_rotationSpeed, transform);
 		_health = new Health(_startingHealth, _maxHealth);
 		_agent.updateRotation = false;
+		_jumper = new NavMeshAgentJumper(_agent, _jumpSpeed, this, _jumpCurve);
 	}
 
 	private void Update()
@@ -46,8 +50,6 @@ public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealab
 		}
 
 		_health.Value -= amount;
-		
-		Debug.Log($"Нанесен урон по {gameObject.name}, нанесено {amount} урона");
 	}
 
 	public void Heal(int amount)
@@ -59,10 +61,10 @@ public class Character : MonoBehaviour, IDirectionRotateble, IDamagable, IHealab
 		}
 		
 		_health.Value += amount;
-		
-		Debug.Log($"Исцеление на {amount} у {gameObject.name}");
 	}
 
 
 	public void SetDestination(Vector3 target) => _agent.SetDestination(target);
+
+	public void Jump() => _jumper.Jump(_agent.currentOffMeshLinkData);
 }

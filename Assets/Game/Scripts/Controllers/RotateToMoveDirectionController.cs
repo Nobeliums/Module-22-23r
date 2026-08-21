@@ -11,6 +11,12 @@ public class RotateToMoveDirectionController : Controller
 
 	protected override void UpdateLogic(float deltaTime)
 	{
+		if (_character.InJumpProcess)
+		{
+			_character.SetRotationDirection(_character.Agent.currentOffMeshLinkData.endPos - _character.Agent.currentOffMeshLinkData.startPos);
+			return;
+		}
+		
 		_character.SetRotationDirection(_character.Agent.desiredVelocity);
 	}
 }

@@ -1,72 +1,71 @@
-using System;
-using System.Linq;
+using System.Collections;
 using UnityEngine;
 
-public class ExplosionTimerTrap : ContactInteractable
+public class ExplosionTimerTrap : MonoBehaviour
 {
 	[SerializeField] private int _damage;
 	[SerializeField] private float _timeToActivate;
-	[SerializeField] private LayerMask _layerMasks;
+	[SerializeField] private LayerMask _triggerLayerMasks;
 	[SerializeField] private ParticleSystem _explosionParticle;
 
 	private MeshRenderer _mesh;
 
-	private float _currentTimer;
-	private bool _timerStarted;
+	private bool _isActivated;
+	private bool _isExploded;
 
 	private float ExplosionRadius => GetComponent<SphereCollider>().radius * transform.lossyScale.x;
+	public bool IsExploded => _isExploded;
+	public bool IsActivated => _isActivated;
 
-	public override void Initialize()
+	public void Awake()
 	{
-		base.Initialize();
-
-		_effects.Add(new ExplosionEffect(transform, _damage, ExplosionRadius, _layerMasks));
 		_mesh = GetComponent<MeshRenderer>();
-	}
-
-	private void Update()
-	{
-		if (_isEnabled == false)
-			return;
-
-		if (_timerStarted)
-			_currentTimer += Time.deltaTime;
-		
-		if  (_currentTimer >= _timeToActivate)
-			Trigger();
+		_isActivated = false;
+		_isExploded = false;
 	}
 
 	private void OnTriggerEnter(Collider other)
 	{
-		Debug.Log("Произошел триггер");
-
 		IDamagable damagable = other.GetComponent<IDamagable>();
 
-		if (damagable != null && _isEnabled)
+		if (damagable != null && _isActivated == false)
 		{
-			StartTimer();
+			StartCoroutine(Activate());
 		}
 	}
 
-	protected override void Trigger()
+	private IEnumerator Activate()
 	{
-		Debug.Log("Запущен Trigger");
+		_isActivated = true;
 
-		foreach (IEffect effect in _effects)
-		{
-			effect.Activate();
-		}
+		yield return new WaitForSeconds(_timeToActivate);
+
+		Explode();
 
 		_mesh.enabled = false;
-		Disable();
 		_explosionParticle.Play();
+		_isExploded = true;
+
+		yield return new WaitWhile(IsParticlePlaying);
+
+		Destroy(gameObject);
 	}
 
+	private bool IsParticlePlaying() => _explosionParticle.isPlaying;
 
-	private void StartTimer()
+	private void Explode()
 	{
-		Debug.Log("Запущен таймер");
-		_timerStarted = true;
+		RaycastHit[] hits = Physics.SphereCastAll(
+			transform.position,
+			ExplosionRadius, 
+			transform.forward,
+			0.0f, 
+			_triggerLayerMasks);
+
+		foreach (RaycastHit hit in hits)
+		{
+			hit.transform.GetComponent<IDamagable>()?.TakeDamage(_damage);
+		}
 	}
 
 	private void OnDrawGizmosSelected()
